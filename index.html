@@ -720,19 +720,6 @@ function onWishInput(){
 
 /* ============== PHOTO ============== */
 async function openCamera(){
-  // Check if camera permission is already granted or use new API
-  if(navigator.permissions && navigator.permissions.query){
-    try{
-      const cameraPermission = await navigator.permissions.query({name: 'camera'});
-      if(cameraPermission.state === 'denied'){
-        showToast('📷 Camera permission denied. Please enable it in settings.');
-        return;
-      }
-    }catch(err){
-      console.log('Permission API not fully supported, proceeding with capture');
-    }
-  }
-  
   // Create a mobile-optimized modal
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; display:flex; align-items:flex-end; justify-content:center; backdrop-filter:blur(4px);';
@@ -818,15 +805,21 @@ function onPhotoSelected(evt){
   reader.onload = function(e){
     const img = new Image();
     img.onload = function(){
-      // downscale for storage/share-link size
-      const size = 320;
+      // Store at HD quality (540px for better card rendering)
+      const size = 540;
       const canvas = document.createElement('canvas');
       canvas.width = size; canvas.height = size;
       const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      // Center crop to square
       const minSide = Math.min(img.width, img.height);
       const sx = (img.width-minSide)/2, sy = (img.height-minSide)/2;
       ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+      
+      // Save at high quality JPEG
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
       state.photo = dataUrl; saveLocal();
       document.getElementById('photoPreviewImg').src = dataUrl;
       document.getElementById('photoPreviewWrap').classList.remove('hidden');
@@ -941,7 +934,7 @@ function copyLink(){
 function shareImageWhatsApp(){
   const node = document.getElementById('shareCard');
   showToast('Preparing image…');
-  html2canvas(node, {backgroundColor:null, scale:4, useCORS:true}).then(canvas=>{
+  html2canvas(node, {backgroundColor:null, scale:6, useCORS:true, logging:false, imageTimeout:0}).then(canvas=>{
     canvas.toBlob(blob=>{
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -957,7 +950,7 @@ function shareImageWhatsApp(){
 function shareImageNative(){
   const node = document.getElementById('shareCard');
   showToast('Preparing image…');
-  html2canvas(node, {backgroundColor:null, scale:4, useCORS:true}).then(canvas=>{
+  html2canvas(node, {backgroundColor:null, scale:6, useCORS:true, logging:false, imageTimeout:0}).then(canvas=>{
     canvas.toBlob(blob=>{
       if(navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob], 'onam-2026.png', {type:'image/png'})]})){
         navigator.share({
@@ -1004,7 +997,7 @@ function nativeShare(){
 function downloadImage(){
   const node = document.getElementById('shareCard');
   showToast('Preparing your image…');
-  html2canvas(node, {backgroundColor:null, scale:4, useCORS:true, logging:false}).then(canvas=>{
+  html2canvas(node, {backgroundColor:null, scale:6, useCORS:true, logging:false, imageTimeout:0}).then(canvas=>{
     const link = document.createElement('a');
     link.download = 'my-onam-2026-' + (state.name||'wish').toLowerCase().replace(/\s+/g,'-') + '.png';
     link.href = canvas.toDataURL('image/png');
