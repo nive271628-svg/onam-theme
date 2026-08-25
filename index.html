@@ -479,10 +479,6 @@ a{color:inherit;}
         <span class="icon">📁</span>
         <p>Upload from Gallery</p>
       </button>
-      <button class="photo-option-btn" onclick="openCamera()">
-        <span class="icon">📷</span>
-        <p>Take a Photo</p>
-      </button>
     </div>
     <input type="file" id="photoFile" accept="image/*" class="hidden" onchange="onPhotoSelected(event)">
 
@@ -796,6 +792,112 @@ function openPhotoCapture(cameraMode){
   input.capture = cameraMode; // 'user' for front, 'environment' for back
   input.onchange = onPhotoSelected;
   input.click();
+}
+
+let currentFacingMode = 'user'; // 'user' for front, 'environment' for back
+let currentStream = null;
+
+async function openCameraScreen(){
+  goTo('screen-camera');
+  await startCameraFeed('user');
+}
+
+async function startCameraFeed(facingMode){
+  try{
+    currentFacingMode = facingMode;
+    // Stop existing stream
+    if(currentStream){
+      currentStream.getTracks().forEach(track => track.stop());
+    }
+    
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: facingMode,
+        width: {ideal: 1280},
+        height: {ideal: 720}
+      },
+      audio: false
+    });
+    
+    currentStream = stream;
+    const video = document.getElementById('cameraFeed');
+    video.srcObject = stream;
+    
+    // iOS requires user gesture to play
+    await video.play();
+    showToast('📷 Camera ready');
+  } catch(err){
+    if(err.name === 'NotAllowedError'){
+      showToast('📷 Camera permission denied');
+    } else if(err.name === 'NotFoundError'){
+      showToast('📷 No camera found');
+    } else {
+      showToast('📷 Camera error: ' + err.message);
+    }
+    goTo('screen-photo');
+  }
+}
+
+async function flipCamera(){
+  const newFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+  await startCameraFeed(newFacingMode);
+}
+
+async function captureFromCamera(){
+  const video = document.getElementById('cameraFeed');
+  const canvas = document.createElement('canvas');
+  
+  canvas.width = 540;
+  canvas.height = 540;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  
+  // Calculate center crop
+  const videoAspect = video.videoWidth / video.videoHeight;
+  let sourceX, sourceY, sourceWidth, sourceHeight;
+  
+  if(videoAspect > 1){
+    // Video is wider
+    sourceHeight = video.videoHeight;
+    sourceWidth = video.videoHeight;
+    sourceX = (video.videoWidth - sourceWidth) / 2;
+    sourceY = 0;
+  } else {
+    // Video is taller
+    sourceWidth = video.videoWidth;
+    sourceHeight = video.videoWidth;
+    sourceX = 0;
+    sourceY = (video.videoHeight - sourceHeight) / 2;
+  }
+  
+  ctx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, 540, 540);
+  
+  // Convert to high-quality JPEG
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+  state.photo = dataUrl;
+  saveLocal();
+  
+  // Close camera and show preview
+  closeCameraScreen();
+  document.getElementById('photoPreviewImg').src = dataUrl;
+  document.getElementById('photoPreviewWrap').classList.remove('hidden');
+  document.getElementById('photoDropZone').classList.add('hidden');
+  
+  showToast('📸 Photo captured!');
+}
+
+function closeCameraScreen(){
+  if(currentStream){
+    currentStream.getTracks().forEach(track => track.stop());
+    currentStream = null;
+  }
+  goTo('screen-photo');
+}
+
+async function openCamera(){
+  // Open the full-screen camera interface
+  await openCameraScreen();
 }
 
 function onPhotoSelected(evt){
