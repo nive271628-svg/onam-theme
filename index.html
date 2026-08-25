@@ -261,7 +261,6 @@ a{color:inherit;}
 .link-box button{background:var(--kerala-green); color:#fff; font-weight:700; font-size:12.5px; padding:9px 14px; border-radius:10px; white-space:nowrap;}
 .share-btns{display:flex; flex-direction:column; gap:10px; width:100%;}
 .share-btn{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:15px; border-radius:16px; font-weight:700; font-size:15px;}
-.share-btn.whatsapp{background:#25D366; color:#fff; box-shadow:0 8px 20px rgba(37,211,102,0.35);}
 .share-btn.download{background:rgba(255,255,255,0.75); color:var(--ink); border:1.5px solid rgba(107,155,94,0.25);}
 .share-btn.native{background:rgba(255,255,255,0.75); color:var(--ink); border:1.5px solid rgba(107,155,94,0.25);}
 .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--kerala-green); color:#fff; padding:11px 22px; border-radius:99px; font-weight:700; font-size:13.5px; opacity:0; transition:all .3s; z-index:50; box-shadow:0 10px 25px rgba(0,0,0,0.2);}
@@ -499,7 +498,7 @@ a{color:inherit;}
   <section class="screen" id="screen-preview">
     <div class="eyebrow">Step 6 of 6</div>
     <h2 class="step-title">Your Onam moment</h2>
-    <p class="step-sub">Optimized for WhatsApp Status &amp; Instagram Stories.</p>
+    <p class="step-sub">Optimized for Instagram Stories &amp; social media.</p>
     <div class="card-stage"><div class="onam-card" id="previewCard"></div></div>
     <div class="preview-actions">
       <button class="btn-back" onclick="goTo('screen-photo')">← Edit</button>
@@ -514,8 +513,7 @@ a{color:inherit;}
     <p class="share-sub">Share your beautiful Onam card with your loved ones.</p>
     <div class="card-stage" style="margin:12px 0 24px;"><div class="onam-card" id="shareCard"></div></div>
     <div class="share-btns">
-      <button class="share-btn whatsapp" onclick="shareImageWhatsApp()">📱 Share on WhatsApp</button>
-      <button class="share-btn native" onclick="shareImageNative()">📤 Share Image</button>
+      <button class="share-btn native" onclick="shareImageNative()">� Share Image</button>
       <button class="share-btn download" onclick="downloadImage()">⬇️ Download Image</button>
     </div>
     <button class="btn-ghost" onclick="resetFlow()" style="margin-top:14px;">Start Over</button>
@@ -1033,22 +1031,6 @@ function copyLink(){
   });
 }
 
-function shareImageWhatsApp(){
-  const node = document.getElementById('shareCard');
-  showToast('Preparing image…');
-  html2canvas(node, {backgroundColor:null, scale:8, useCORS:true, logging:false, imageTimeout:0, pixelRatio:2, allowTaint:true}).then(canvas=>{
-    canvas.toBlob(blob=>{
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = `https://wa.me/?text=🌸%20I%20created%20my%20Onam%20wish!%20Open%20it%20and%20create%20yours%20too%20💛&media=${encodeURIComponent(url)}`;
-      // For WhatsApp Web, we'll use a simpler approach
-      const canvas64 = canvas.toDataURL('image/jpeg', 0.98);
-      window.open(`https://wa.me/?text=${encodeURIComponent('🌸 I created my Onam wish! Create yours too 💛')}`, '_blank');
-      showToast('Opening WhatsApp…');
-    }, 'image/jpeg', 0.98);
-  }).catch(()=>showToast('Could not generate image'));
-}
-
 function shareImageNative(){
   const node = document.getElementById('shareCard');
   showToast('Preparing image…');
@@ -1075,16 +1057,6 @@ function downloadImageBlob(blob){
   link.href = url;
   link.click();
   URL.revokeObjectURL(url);
-}
-
-function shareWhatsApp(){
-  const link = document.getElementById('shareLinkInput')?.value || '';
-  if(link){
-    const text = `🌸 I created my Onam wish! Open it and create yours too 💛\n${link}`;
-    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
-  } else {
-    shareImageWhatsApp();
-  }
 }
 
 function nativeShare(){
