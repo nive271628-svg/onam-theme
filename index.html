@@ -106,8 +106,8 @@ a{color:inherit;}
 
 .btn-primary{
   background:linear-gradient(135deg, var(--orange), #d9672a);
-  color:#fff; font-weight:700; font-size:16.5px; padding:16px 30px; border-radius:18px;
-  box-shadow:0 10px 24px rgba(232,129,58,0.4); width:100%; max-width:320px;
+  color:#fff; font-weight:700; font-size:18px; padding:20px 40px; border-radius:18px;
+  box-shadow:0 10px 24px rgba(232,129,58,0.4); width:100%; max-width:340px;
   display:flex; align-items:center; justify-content:center; gap:8px;
   transition:transform .15s ease, box-shadow .15s ease;
 }
@@ -409,7 +409,7 @@ a{color:inherit;}
     </div>
     <h1 class="display" style="position:relative; z-index:2;">My Onam <span class="accent">2026</span> 🌸</h1>
     <div class="tag" style="position:relative; z-index:2;">"Create your Onam moment. Share the happiness."</div>
-    <p class="sub" style="position:relative; z-index:2; color:#F6C453;">Make a personalized Onam wish, add your name and photo, and share your unique Onam card with everyone.</p>
+    <p class="sub" style="position:relative; z-index:2; color:var(--ink);">Make a personalized Onam wish, add your name and photo, and share your unique Onam card with everyone.</p>
     <button class="btn-primary" onclick="startCreate()" style="position:relative; z-index:2;">✨ Create My Onam Wish</button>
   </section>
 
@@ -515,16 +515,12 @@ a{color:inherit;}
   <section class="screen share-screen" id="screen-share">
     <div class="progress-wrap" style="visibility:hidden;height:0;padding:0;"></div>
     <h2 class="share-title">🎉 Your Onam Moment is Ready!</h2>
-    <p class="share-sub">Share your personalized Onam wish with your friends and family.</p>
-    <div class="card-stage"><div class="onam-card" id="shareCard"></div></div>
-    <div class="link-box">
-      <input type="text" id="shareLinkInput" readonly>
-      <button onclick="copyLink()">🔗 Copy</button>
-    </div>
+    <p class="share-sub">Share your beautiful Onam card with your loved ones.</p>
+    <div class="card-stage" style="margin:12px 0 24px;"><div class="onam-card" id="shareCard"></div></div>
     <div class="share-btns">
-      <button class="share-btn whatsapp" onclick="shareWhatsApp()">📱 Share on WhatsApp</button>
-      <button class="share-btn native" onclick="nativeShare()">📤 Share</button>
-      <button class="share-btn download" onclick="downloadImage()">⬇️ Download Status Image</button>
+      <button class="share-btn whatsapp" onclick="shareImageWhatsApp()">📱 Share on WhatsApp</button>
+      <button class="share-btn native" onclick="shareImageNative()">📤 Share Image</button>
+      <button class="share-btn download" onclick="downloadImage()">⬇️ Download Image</button>
     </div>
     <button class="btn-ghost" onclick="resetFlow()" style="margin-top:14px;">Start Over</button>
   </section>
@@ -893,9 +889,7 @@ function renderCard(targetId){
           <div class="card-wish">"${wish}"</div>
         </div>
         <div class="card-name">— ${name}</div>
-        <div class="card-footer">MY ONAM 2026</div>
       </div>
-      <div class="tap-hint">✨ tap for petals</div>
     `;
   } else {
     el.innerHTML = `
@@ -906,9 +900,7 @@ function renderCard(targetId){
           <div class="card-wish">"${wish}"</div>
         </div>
         <div class="card-name">— ${name}</div>
-        <div class="card-footer">MY ONAM 2026</div>
       </div>
-      <div class="tap-hint">✨ tap for petals</div>
     `;
   }
   if(!el.dataset.tapBound){
@@ -946,25 +938,73 @@ function copyLink(){
   });
 }
 
+function shareImageWhatsApp(){
+  const node = document.getElementById('shareCard');
+  showToast('Preparing image…');
+  html2canvas(node, {backgroundColor:null, scale:4, useCORS:true}).then(canvas=>{
+    canvas.toBlob(blob=>{
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = `https://wa.me/?text=🌸%20I%20created%20my%20Onam%20wish!%20Open%20it%20and%20create%20yours%20too%20💛&media=${encodeURIComponent(url)}`;
+      // For WhatsApp Web, we'll use a simpler approach
+      const canvas64 = canvas.toDataURL('image/png');
+      window.open(`https://wa.me/?text=${encodeURIComponent('🌸 I created my Onam wish! Create yours too 💛')}`, '_blank');
+      showToast('Opening WhatsApp…');
+    }, 'image/png');
+  }).catch(()=>showToast('Could not generate image'));
+}
+
+function shareImageNative(){
+  const node = document.getElementById('shareCard');
+  showToast('Preparing image…');
+  html2canvas(node, {backgroundColor:null, scale:4, useCORS:true}).then(canvas=>{
+    canvas.toBlob(blob=>{
+      if(navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob], 'onam-2026.png', {type:'image/png'})]})){
+        navigator.share({
+          title:'My Onam 2026',
+          text:'🌸 I created my Onam wish! Create yours too 💛',
+          files:[new File([blob], 'onam-2026.png', {type:'image/png'})]
+        }).catch(()=>{});
+      } else {
+        downloadImageBlob(blob);
+      }
+      showToast('Sharing…');
+    }, 'image/png');
+  }).catch(()=>showToast('Could not generate image'));
+}
+
+function downloadImageBlob(blob){
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.download = 'my-onam-2026-' + (state.name||'wish').toLowerCase().replace(/\s+/g,'-') + '.png';
+  link.href = url;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function shareWhatsApp(){
-  const link = document.getElementById('shareLinkInput').value;
-  const text = `🌸 I created my Onam wish! Open it and create yours too 💛\n${link}`;
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  const link = document.getElementById('shareLinkInput')?.value || '';
+  if(link){
+    const text = `🌸 I created my Onam wish! Open it and create yours too 💛\n${link}`;
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  } else {
+    shareImageWhatsApp();
+  }
 }
 
 function nativeShare(){
-  const link = document.getElementById('shareLinkInput').value;
-  if(navigator.share){
+  const link = document.getElementById('shareLinkInput')?.value || '';
+  if(link && navigator.share){
     navigator.share({title:'My Onam 2026', text:'🌸 I created my Onam wish! Open it and create yours too 💛', url:link}).catch(()=>{});
   } else {
-    copyLink();
+    shareImageNative();
   }
 }
 
 function downloadImage(){
   const node = document.getElementById('shareCard');
   showToast('Preparing your image…');
-  html2canvas(node, {backgroundColor:null, scale:3}).then(canvas=>{
+  html2canvas(node, {backgroundColor:null, scale:4, useCORS:true, logging:false}).then(canvas=>{
     const link = document.createElement('a');
     link.download = 'my-onam-2026-' + (state.name||'wish').toLowerCase().replace(/\s+/g,'-') + '.png';
     link.href = canvas.toDataURL('image/png');
