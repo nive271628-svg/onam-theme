@@ -1036,42 +1036,42 @@ function copyLink(){
 function shareImageWhatsApp(){
   const node = document.getElementById('shareCard');
   showToast('Preparing image…');
-  html2canvas(node, {backgroundColor:null, scale:6, useCORS:true, logging:false, imageTimeout:0}).then(canvas=>{
+  html2canvas(node, {backgroundColor:null, scale:8, useCORS:true, logging:false, imageTimeout:0, pixelRatio:2, allowTaint:true}).then(canvas=>{
     canvas.toBlob(blob=>{
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = `https://wa.me/?text=🌸%20I%20created%20my%20Onam%20wish!%20Open%20it%20and%20create%20yours%20too%20💛&media=${encodeURIComponent(url)}`;
       // For WhatsApp Web, we'll use a simpler approach
-      const canvas64 = canvas.toDataURL('image/png');
+      const canvas64 = canvas.toDataURL('image/jpeg', 0.98);
       window.open(`https://wa.me/?text=${encodeURIComponent('🌸 I created my Onam wish! Create yours too 💛')}`, '_blank');
       showToast('Opening WhatsApp…');
-    }, 'image/png');
+    }, 'image/jpeg', 0.98);
   }).catch(()=>showToast('Could not generate image'));
 }
 
 function shareImageNative(){
   const node = document.getElementById('shareCard');
   showToast('Preparing image…');
-  html2canvas(node, {backgroundColor:null, scale:6, useCORS:true, logging:false, imageTimeout:0}).then(canvas=>{
+  html2canvas(node, {backgroundColor:null, scale:8, useCORS:true, logging:false, imageTimeout:0, pixelRatio:2, allowTaint:true}).then(canvas=>{
     canvas.toBlob(blob=>{
-      if(navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob], 'onam-2026.png', {type:'image/png'})]})){
+      if(navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob], 'onam-2026.jpg', {type:'image/jpeg'})]})){
         navigator.share({
           title:'My Onam 2026',
           text:'🌸 I created my Onam wish! Create yours too 💛',
-          files:[new File([blob], 'onam-2026.png', {type:'image/png'})]
+          files:[new File([blob], 'onam-2026.jpg', {type:'image/jpeg'})]
         }).catch(()=>{});
       } else {
         downloadImageBlob(blob);
       }
       showToast('Sharing…');
-    }, 'image/png');
+    }, 'image/jpeg', 0.98);
   }).catch(()=>showToast('Could not generate image'));
 }
 
 function downloadImageBlob(blob){
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.download = 'my-onam-2026-' + (state.name||'wish').toLowerCase().replace(/\s+/g,'-') + '.png';
+  link.download = 'my-onam-2026-' + (state.name||'wish').toLowerCase().replace(/\s+/g,'-') + '.jpg';
   link.href = url;
   link.click();
   URL.revokeObjectURL(url);
@@ -1099,10 +1099,10 @@ function nativeShare(){
 function downloadImage(){
   const node = document.getElementById('shareCard');
   showToast('Preparing your image…');
-  html2canvas(node, {backgroundColor:null, scale:6, useCORS:true, logging:false, imageTimeout:0}).then(canvas=>{
+  html2canvas(node, {backgroundColor:null, scale:8, useCORS:true, logging:false, imageTimeout:0, pixelRatio:2, allowTaint:true}).then(canvas=>{
     const link = document.createElement('a');
-    link.download = 'my-onam-2026-' + (state.name||'wish').toLowerCase().replace(/\s+/g,'-') + '.png';
-    link.href = canvas.toDataURL('image/png');
+    link.download = 'my-onam-2026-' + (state.name||'wish').toLowerCase().replace(/\s+/g,'-') + '.jpg';
+    link.href = canvas.toDataURL('image/jpeg', 0.98);
     link.click();
     showToast('Downloaded! 🎉');
   }).catch(()=>showToast('Could not generate image'));
